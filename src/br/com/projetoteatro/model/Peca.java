@@ -16,6 +16,14 @@ public class Peca {
     private List<Sessao> sessoes;
     private double valorAluguel;
 
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
+    }
+
     public void adicionarSessao(Sessao sessao){
         for (Sessao s : sessoes) {
             if (s.conflitaCom(sessao)) {

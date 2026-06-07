@@ -20,6 +20,36 @@ public class PropostaAluguel {
     private StatusProposta statusProposta;
     private LocalDate dataEncerramento;
 
+    public void setId(long id) {
+        this.id = id;
+    }
+
+    public void setContratante(Contratante contratante) {
+        this.contratante = contratante;
+    }
+
+    public void setNomePeca(String nomePeca) {
+        this.nomePeca = nomePeca;
+    }
+
+    public void setDataInicio(LocalDate dataInicio) {
+        this.dataInicio = dataInicio;
+    }
+
+    public void setHorarioInicio(LocalTime horarioInicio) {
+        this.horarioInicio = horarioInicio;
+    }
+
+    public void setHorarioFim(LocalTime horarioFim) {
+        this.horarioFim = horarioFim;
+    }
+
+    public void setDataEncerramento(LocalDate dataEncerramento) {
+        this.dataEncerramento = dataEncerramento;
+    }
+
+
+
     public PropostaAluguel(
             Contratante contratante,
             String nomePeca,
@@ -137,4 +167,5 @@ public class PropostaAluguel {
                 ", status=" + statusProposta +
                 '}';
     }
+
 }

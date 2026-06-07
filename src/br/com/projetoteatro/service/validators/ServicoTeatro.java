@@ -1,10 +1,8 @@
-package br.com.projetoteatro.service;
+package br.com.projetoteatro.service.validators;
 
 import br.com.projetoteatro.enums.StatusProposta;
 import br.com.projetoteatro.exceptions.*;
-import br.com.projetoteatro.model.Contratante;
-import br.com.projetoteatro.model.PropostaAluguel;
-import br.com.projetoteatro.model.RegraAluguel;
+import br.com.projetoteatro.model.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,9 +15,9 @@ public class ServicoTeatro {
     private LoginService loginService;
     private PropostaService propostaService;
     private RegrasService regrasService;
-    //private ArrayList<Peca> listaPecas;
-    // private ArrayList<Sessao> listaSessoes;
-    //private ArrayList<Ingresso> listaIngressos;
+    private ArrayList<Peca> listaPecas;
+     private ArrayList<Sessao> listaSessoes;
+    private ArrayList<Ingresso> listaIngressos;
 
     public ServicoTeatro(){
 

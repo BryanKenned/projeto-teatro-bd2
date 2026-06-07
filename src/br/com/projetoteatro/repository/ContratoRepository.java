@@ -1,11 +1,8 @@
 package br.com.projetoteatro.repository;
 
-import br.com.projetoteatro.model.Contratante;
 import br.com.projetoteatro.model.PropostaAluguel;
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.io.xml.StaxDriver;
-
-import com.thoughtworks.xstream.io.xml.DomDriver;
 import com.thoughtworks.xstream.security.AnyTypePermission;
 
 import java.io.File;
@@ -20,11 +17,9 @@ public class ContratoRepository {
     private final File ARQUIVO = new File("contratos.xml");
 
     public ContratoRepository() {
-        // Permite ler os objetos sem dar erro de segurança
         this.xstream.addPermission(AnyTypePermission.ANY);
-
-        // Deixa o XML com a tag <proposta> limpa em vez de br.com.projetoteatro...
         this.xstream.alias("proposta", PropostaAluguel.class);
+        this.xstream.alias("contratos", List.class);
     }
 
     public void salvarContrato(PropostaAluguel proposta) {
@@ -45,29 +40,25 @@ public class ContratoRepository {
         }
     }
 
-    private List<PropostaAluguel> carregarContratos() {
+    public List<PropostaAluguel> carregarContratos() {
         try {
             if (!ARQUIVO.exists() || ARQUIVO.length() == 0) {
-                return new ArrayList<>();
+                return new ArrayList<PropostaAluguel>();
             }
 
             String xml = new String(Files.readAllBytes(ARQUIVO.toPath()));
-
-            // Lê o objeto genérico do XML
             Object objetoLido = xstream.fromXML(xml);
 
-            // Se o que estiver no XML for uma Lista, faz o cast direto
             if (objetoLido instanceof List) {
                 return (List<PropostaAluguel>) objetoLido;
             }
-            // Se for um objeto solo (antigo), cria uma lista nova, adiciona ele e retorna
             else if (objetoLido instanceof PropostaAluguel) {
-                List<PropostaAluguel> listaTratada = new ArrayList<>();
+                List<PropostaAluguel> listaTratada = new ArrayList<PropostaAluguel>();
                 listaTratada.add((PropostaAluguel) objetoLido);
                 return listaTratada;
             }
 
-            return new ArrayList<>();
+            return new ArrayList<PropostaAluguel>();
 
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -82,16 +73,69 @@ public class ContratoRepository {
         }
 
         for (PropostaAluguel proposta : propostas) {
-
             if (proposta.getId() == id) {
                 return proposta;
             }
         }
-
         return null;
     }
 
     public List<PropostaAluguel> listarTodos() {
         return carregarContratos();
+    }
+
+    // <<< SEU MÉTODO DE FILTRO COM SINTAXE COMUM >>>
+    public List<PropostaAluguel> listarComFiltros(String nomePeca, String status) {
+        List<PropostaAluguel> todos = carregarContratos();
+        List<PropostaAluguel> filtrados = new ArrayList<PropostaAluguel>();
+
+        for (PropostaAluguel c : todos) {
+            boolean bateNome = false;
+            boolean bateStatus = false;
+
+            // 1. Valida o filtro de Nome da Peça
+            if (nomePeca == null || nomePeca.isEmpty()) {
+                bateNome = true;
+            } else if (c.getNomePeca().toLowerCase().contains(nomePeca.toLowerCase())) {
+                bateNome = true;
+            }
+
+            // 2. Valida o filtro de Status
+            if (status.equals("Todos")) {
+                bateStatus = true;
+            } else if (c.getStatusProposta().toString().equalsIgnoreCase(status)) {
+                bateStatus = true;
+            }
+
+            // Se passar nos dois filtros, adiciona na lista
+            if (bateNome && bateStatus) {
+                filtrados.add(c);
+            }
+        }
+
+        return filtrados;
+    }
+
+    public void atualizarContrato(PropostaAluguel propostaAtualizada) {
+        List<PropostaAluguel> propostas = carregarContratos();
+
+        // Procura a proposta antiga dentro da lista do XML
+        for (int i = 0; i < propostas.size(); i++) {
+            if (propostas.get(i).getId() == propostaAtualizada.getId()) {
+                // Substitui a proposta antiga pela nova (com status alterado)
+                propostas.set(i, propostaAtualizada);
+                break;
+            }
+        }
+
+        // Grava a lista atualizada de volta no arquivo XML
+        String xml = xstream.toXML(propostas);
+        try {
+            try (PrintWriter gravar = new PrintWriter(ARQUIVO)) {
+                gravar.print(xml);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Erro ao atualizar o XML: " + e.getMessage());
+        }
     }
 }

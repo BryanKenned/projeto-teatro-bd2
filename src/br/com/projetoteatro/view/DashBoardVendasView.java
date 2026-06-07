@@ -114,30 +114,65 @@ public class DashBoardVendasView extends JPanel {
 
     public void atualizarDadosDashboard() {
         try {
-            //Atualiza os Cards com dados fictícios por enquanto (regras matemáticas entram aqui depois)
-            lblFaturamento.setText("R$ 00");
-            lblIngressosHoje.setText("0 Unidades");
-            lblPecaDestaque.setText("Nenhum");
-
-            //Limpa a tabela antes de carregar
+            // Limpa a tabela antes de carregar
             modeloTabela.setRowCount(0);
 
-            //Puxa os dados reais do seu XML usando o seu listarTodos()
+            // Puxa os dados reais do seu XML usando o seu listarTodos()
             List<PropostaAluguel> contratos = contratoRepo.listarTodos();
+
+            // 🛑 >>> INÍCIO DA MUDANÇA COM AS REGRAS MATEMÁTICAS <<<
+            double faturamentoTotalMes = 0;
+            int mesAtual = java.time.LocalDate.now().getMonthValue();
+            int anoAtual = java.time.LocalDate.now().getYear();
+
+            // Instancia a service que acabamos de destravar para calcular os ingressos
+            br.com.projetoteatro.service.ContratoService contratoService = new br.com.projetoteatro.service.ContratoService();
 
             if (contratos != null && !contratos.isEmpty()) {
                 for (PropostaAluguel c : contratos) {
-                    // Só mostra na tabela do Dashboard peças que não estão encerradas
-                    if (!"ENCERRADO".equals(c.getStatusProposta())) {
+
+                    // 1. CÁLCULO DO CARD DE FATURAMENTO
+                    // Verifica se a peça acontece no mês e ano vigentes
+                    if (c.getDataInicio() != null &&
+                            c.getDataInicio().getMonthValue() == mesAtual &&
+                            c.getDataInicio().getYear() == anoAtual) {
+
+                        String status = c.getStatusProposta().toString();
+
+                        if (status.equals("EM_CONTRATACAO")) {
+                            faturamentoTotalMes += c.getValorAluguel(); // Soma o valor fixo da locação
+                        } else if (status.equals("ENCERRADO")) {
+                            faturamentoTotalMes += contratoService.calcularTotalIngressos(c.getId()); // Soma os ingressos reais vendidos
+                        }
+                    }
+
+                    // 2. PREENCHIMENTO DA TABELA (Exclui os encerrados)
+                    if (!"ENCERRADO".equals(c.getStatusProposta().toString())) {
                         modeloTabela.addRow(new Object[]{
                                 c.getId(),
                                 c.getNomePeca(),
-                                c.getDataInicio() != null ? c.getDataInicio().toString() : "Sem Data", // Certifique-se de que o objeto data converte bem
+                                c.getDataInicio() != null ? c.getDataInicio().toString() : "Sem Data",
                                 c.getStatusProposta()
                         });
                     }
                 }
             }
+
+            // 3. ATUALIZAÇÃO VISUAL DOS CARDS COM OS VALORES REAIS
+            String faturamentoFormatado = String.format("R$ %.2f", faturamentoTotalMes).replace(".", ",");
+            lblFaturamento.setText(faturamentoFormatado);  // MUDA O CARD VERDE AQUI!
+
+            // Puxa do repositório de ingressos a quantidade total vendida (Apenas para não ficar estático)
+            int totalIngressos = ingressoRepo.listar() != null ? ingressoRepo.listar().size() : 0;
+            lblIngressosHoje.setText(totalIngressos + " Unidades");
+
+            // Define dinamicamente o nome da primeira peça ativa encontrada como destaque
+            if (contratos != null && !contratos.isEmpty()) {
+                lblPecaDestaque.setText(contratos.get(0).getNomePeca());
+            } else {
+                lblPecaDestaque.setText("Nenhum");
+            }
+            //  >>> FIM DA MUDANÇA DO DASHBOARD <<<
 
         } catch (Exception e) {
             System.err.println("Erro ao atualizar dados do Dashboard: " + e.getMessage());

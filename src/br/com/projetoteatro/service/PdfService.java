@@ -7,6 +7,10 @@ import java.io.FileOutputStream;
 
 public class PdfService {
 
+    public static void gerarProposta(PropostaAluguel proposta) {
+
+    }
+
     public String gerarContrato(PropostaAluguel proposta) {
         String nomeArquivo =
                 "contrato_" + proposta.getId() + ".pdf";

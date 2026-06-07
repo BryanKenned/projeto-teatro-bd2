@@ -12,8 +12,12 @@ import java.util.Properties;
 
 public class EnviarEmailService {
 
-    private final String emailSistema;
-    private final String senhaSistema;
+    private  String emailSistema;
+    private  String senhaSistema;
+
+    public EnviarEmailService() {
+
+    }
 
     public EnviarEmailService(
             String emailSistema,

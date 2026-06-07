@@ -9,6 +9,11 @@ public class Contratante extends Pessoa {
         this.setNome(nome);
     }
 
+    public Contratante(String nome, String email, String telefone,String cpf) {
+     super(nome,email,telefone,cpf);
+     this.id = System.currentTimeMillis();
+    }
+
  public Contratante(String nome, String email, String telefone, String cpf,String senha) {
   super(nome, email, telefone, cpf);
   this.id = System.currentTimeMillis();

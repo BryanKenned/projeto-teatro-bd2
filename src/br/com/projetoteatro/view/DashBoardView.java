@@ -8,6 +8,8 @@ public class DashBoardView extends JFrame {
     private GerenciarEspetaculosView gerenciarEspetaculosView;
     private BilheteriaView bilheteriaView;
     private DashBoardVendasView dashBoardVendasView;
+    private AgendaTeatroView agendaTeatroView;
+    private RelatorioView relatorioView;
 
     public DashBoardView() {
         setTitle("Gerenciamento Teatro");
@@ -94,6 +96,8 @@ public class DashBoardView extends JFrame {
         this.gerenciarEspetaculosView = new GerenciarEspetaculosView();
         this.bilheteriaView = new BilheteriaView();
         this.dashBoardVendasView = new DashBoardVendasView();
+        this.agendaTeatroView = new AgendaTeatroView();
+        this.relatorioView = new RelatorioView();
 
         JPanel cardRelatorio = new JPanel();
         cardRelatorio.setBackground(Color.GRAY);
@@ -104,8 +108,9 @@ public class DashBoardView extends JFrame {
         cardBilheteria.add(new JLabel("TELA DE BILHETERIA"));
 
         contentPanel.add(dashBoardVendasView, "home");
-        contentPanel.add(cardRelatorio, "relatorio");
-        contentPanel.add(cardBilheteria, "bilheteria");
+        contentPanel.add(this.agendaTeatroView, "agenda");
+        contentPanel.add(this.relatorioView, "relatorio");
+        contentPanel.add(bilheteriaView, "bilheteria");
 
         contentPanel.add(this.gerenciarEspetaculosView, "espetaculos");
         contentPanel.add(this.bilheteriaView, "bilheteria");
@@ -134,6 +139,13 @@ public class DashBoardView extends JFrame {
 
         btnBilheteria.addActionListener(e -> {
             cardLayout.show(contentPanel, "bilheteria");
+            contentPanel.revalidate();
+            contentPanel.repaint();
+        });
+
+        // Coloque junto com as ações dos outros botões lá embaixo:
+        btnAgenda.addActionListener(e -> {
+            cardLayout.show(contentPanel, "agenda");
             contentPanel.revalidate();
             contentPanel.repaint();
         });
