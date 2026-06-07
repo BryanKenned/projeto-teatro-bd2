@@ -43,7 +43,7 @@ public class PropostaService {
 
     public void geradorPropostaPDF(long id) throws PropostaInvalidaException {
         PropostaAluguel proposta = buscarProposta(id);
-        PdfService.gerarProposta(proposta);
+        //PdfService.gerarProposta(proposta);
     }
 
     public boolean enviarPropostaPorEmail(long id) throws PropostaInvalidaException {

@@ -24,8 +24,7 @@ public class ContratoService {
         emailService.enviarArquivoPdf(
                 proposta.getContratante().getEmail(),
                 "Contrato de aluguel",
-                "Segue contrato em anexo.",
-                pdf
+                "Segue contrato em anexo.", pdf
         );
     }
 
