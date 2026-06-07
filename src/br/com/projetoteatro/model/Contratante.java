@@ -1,7 +1,8 @@
 package br.com.projetoteatro.model;
 
 public class Contratante extends Pessoa {
-     private long id;
+ private Pessoa pessoa;
+ private long id;
      private String senha;
 
     public Contratante(String nome) {

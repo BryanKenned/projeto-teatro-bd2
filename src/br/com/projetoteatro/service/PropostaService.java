@@ -7,22 +7,39 @@ import br.com.projetoteatro.model.PropostaAluguel;
 import br.com.projetoteatro.service.validators.ValidadorHorarios;
 
 import java.util.ArrayList;
-/*
+
 public class PropostaService {
 
     private ArrayList<PropostaAluguel> listaPropostas;
     private ValidadorHorarios validador;
+    private RegrasService regrasService;
+
 
     public PropostaService(){
         listaPropostas=new ArrayList<>();
         validador=new ValidadorHorarios();
+        regrasService=new RegrasService();
+
     }
 
     //cadastrar proposta
     public void cadastrarProposta(PropostaAluguel p)throws ConflitoHorarioException {
-        validador.validarConflitoHorario(p,listaPropostas);
+        validador.duracaoPecaPorPeriodo(p.getHorarioInicio(),p.getHorarioFim());
+        validador.validarConflitoHorario(p.getDataInicio(),p.getDataFim(),p.getHorarioInicio(),p.getHorarioFim(),listaPropostas);
+        Double valorCalculadoAluguel=regrasService.calcularAluguel(p);
+        p.setValorAluguel(valorCalculadoAluguel);
         listaPropostas.add(p);
     }
+    //buscar proposta por id
+    public PropostaAluguel buscarProposta(long id) throws PropostaInvalidaException {
+        for(PropostaAluguel p: listaPropostas){
+            if(p.getId()==id){
+                return p;
+            }
+        }
+        throw new PropostaInvalidaException("Proposta não encontrada....");
+    }
+
     //gerar proposta pdf
     public void geradorPropostaPDF(long id)throws PropostaInvalidaException {
         PropostaAluguel proposta=buscarProposta(id);
@@ -36,22 +53,16 @@ public class PropostaService {
         return EmailService.enviarEmail(proposta.getContratante().getEmail(),"Proposta Teatro","Segue em anexo a proposta do teatro.",arquivo,arquivo);
 
     }
-    //buscar proposta por id
-    public PropostaAluguel buscarProposta(long id) throws PropostaInvalidaException {
-        for(PropostaAluguel p: listaPropostas){
-            if(p.getId()==id){
-                return p;
-            }
-        }
-        throw new PropostaInvalidaException("Proposta não encontrada....");
-    }
+
     //lista Proposta
     public ArrayList<PropostaAluguel> getListaPropostas() {
         return listaPropostas;
     }
+
     public void contratarProposta(long id) throws PropostaInvalidaException {
         PropostaAluguel proposta=buscarProposta(id);
         proposta.setStatusProposta(StatusProposta.CONTRATADO);
+
     }
     //estenderproposta
     public void estenderProposta(long id, int dias)throws PropostaInvalidaException {
@@ -66,8 +77,11 @@ public class PropostaService {
     public void encerrarProposta(long id)throws PropostaInvalidaException {
         PropostaAluguel proposta=buscarProposta(id);
         if(proposta.getStatusProposta()==StatusProposta.ENCERRADO){
+            throw new PropostaInvalidaException("Essa proposta já foi encerrado.....");
 
-        }else{proposta.setStatusProposta(StatusProposta.ENCERRADO);}
+        }else{
+            proposta.setStatusProposta(StatusProposta.ENCERRADO);
+        }
     }
 
     public ArrayList<PropostaAluguel> filtrarPropostaPorStatus(StatusProposta s)  {
@@ -98,6 +112,4 @@ public class PropostaService {
         return listagemResultado;
     }
 
-
 }
- */
