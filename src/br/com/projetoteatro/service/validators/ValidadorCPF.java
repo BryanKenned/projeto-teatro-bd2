@@ -3,38 +3,31 @@ package br.com.projetoteatro.service.validators;
 public class ValidadorCPF {
 
     public static boolean isValido(String cpf) {
-        int[] digitosCPF = new int[11];
-        int contador = 10;
-        int soma = 0;
+        if (cpf == null) return false;
 
-        String cpfSemCaracter = cpf.replace("-","").replace(".","");
+        String cpfLimpo = cpf.replaceAll("[^0-9]", "");
 
-        if(cpfSemCaracter.length() != 11) {
+        if (cpfLimpo.length() != 11 || cpfLimpo.matches("(\\d)\\1{10}")) {
             return false;
         }
 
-        for(int i = 0; i < digitosCPF.length; i++) {
-            digitosCPF[i] = Character.getNumericValue(cpfSemCaracter.charAt(i));
+        int[] digitos = new int[11];
+        for (int i = 0; i < 11; i++) {
+            digitos[i] = Character.getNumericValue(cpfLimpo.charAt(i));
         }
 
-        for(int i = 0; i < 9; i++) {
-            soma += digitosCPF[i] * contador;
-            contador--;
+        int soma1 = 0;
+        for (int i = 0; i < 9; i++) {
+            soma1 += digitos[i] * (10 - i);
         }
+        int digito1 = (soma1 % 11 < 2) ? 0 : 11 - (soma1 % 11);
+        if (digitos[9] != digito1) return false;
 
-        if(!(soma % 11 < 2 && digitosCPF[9] == 0 || soma % 11 >= 2 && digitosCPF[9] == 11 - (soma % 11)))  {
-            return false;
+        int soma2 = 0;
+        for (int i = 0; i < 10; i++) {
+            soma2 += digitos[i] * (11 - i);
         }
-
-        int segundoContador = 11;
-        int segundaSoma = 0;
-
-        for(int i = 0; i < 10; i++) {
-            segundaSoma += digitosCPF[i] * segundoContador;
-            segundoContador--;
-        }
-        int segundoDigito = (segundaSoma % 11 < 2) ? 0 : 11 - (segundaSoma % 11);
-
-        return digitosCPF[10] == segundoDigito;
+        int digito2 = (soma2 % 11 < 2) ? 0 : 11 - (soma2 % 11);
+        return digitos[10] == digito2;
     }
 }

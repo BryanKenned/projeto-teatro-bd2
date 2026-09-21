@@ -1,58 +1,87 @@
 package br.com.projetoteatro.service;
 
 import br.com.projetoteatro.exceptions.CPFInvalidoException;
-import br.com.projetoteatro.exceptions.ContratanteInvalidoException;
+import br.com.projetoteatro.exceptions.EmailInvalidoException;
 import br.com.projetoteatro.model.Usuario;
+import br.com.projetoteatro.repository.ClienteRepository;
 import br.com.projetoteatro.service.validators.ValidadorCPF;
+import br.com.projetoteatro.service.validators.ValidadorEmail;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public class ClienteService {
-    private ArrayList<Usuario> listaClientes;
 
-    public ClienteService(){
-        listaClientes=new ArrayList<Usuario> ();
-    }
-    public void verificadorCPF(String cpf) throws CPFInvalidoException {
+    private ClienteRepository clienteRepo;
 
-        if(cpf == null) {
-            throw new CPFInvalidoException("O campo do CPF não pode ser nulo");
+    public ClienteService(ClienteRepository clienteRepo) {
+        if (clienteRepo == null) {
+            throw new IllegalArgumentException(
+                    "O Repositório de Cliente não pode ser nulo!");
         }
 
-        if(!ValidadorCPF.isValido(cpf)) {
-           throw new CPFInvalidoException("CPF inválido") ;
-        }
+        this.clienteRepo = clienteRepo;
     }
 
-    //cadastrar usuario final
+    public void cadastrarCliente(Usuario cliente)
+            throws CPFInvalidoException,
+            EmailInvalidoException {
 
-    public void cadastrarCliente(Usuario u) throws CPFInvalidoException {
-        if(!ValidadorCPF.isValido(u.getCpf())){
-            throw new CPFInvalidoException("CPF inválido...");
+        if (cliente == null) {
+            throw new IllegalArgumentException(
+                    "O cliente não pode ser nulo!");
         }
-        listaClientes.add(u);
-    }
-    // buscar usuario fianl por cpf
-    public Usuario buscarCliente(String cpf) throws CPFInvalidoException, ContratanteInvalidoException {
-        if(!ValidadorCPF.isValido(cpf)){
-            throw new CPFInvalidoException("CPF inválido...");
+
+        if (cliente.getNome() == null || cliente.getNome().trim().isEmpty()) {
+            throw new IllegalArgumentException(
+                    "O nome do cliente é obrigatório!");
         }
-        for(Usuario u: listaClientes){
-            if(u.getCpf().equals(cpf)){
-                return u;
 
-            }
+        if (!ValidadorCPF.isValido(cliente.getCpf())) {
+            throw new CPFInvalidoException(
+                    "CPF inválido!");
         }
-        throw new ContratanteInvalidoException("Usuário não encontrado....");
-    }
-    //lista cliente final
-    public ArrayList<Usuario> getListaCliente() {
-        return listaClientes;
-    }
-    public boolean excluirCliente(String cpf)throws CPFInvalidoException, ContratanteInvalidoException{
 
-        Usuario cliente = buscarCliente(cpf);
-        return listaClientes.remove(cliente);
+        ValidadorEmail.validarEmail(cliente.getEmail());
 
+        if (clienteRepo.buscarCliente(cliente.getCpf()) != null) {
+            throw new IllegalArgumentException(
+                    "CPF já cadastrado!");
+        }
+
+        if (clienteRepo.buscarClienteEmail(cliente.getEmail()) != null) {
+            throw new IllegalArgumentException(
+                    "E-mail já cadastrado!");
+        }
+
+        clienteRepo.adicionarCliente(cliente);
+    }
+
+    public Usuario buscarPorCpf(String cpf) {
+        return clienteRepo.buscarCliente(cpf);
+    }
+
+    public Usuario buscarPorEmail(String email) {
+        return clienteRepo.buscarClienteEmail(email);
+    }
+
+    public List<Usuario> listarClientes() {
+        return clienteRepo.listarCliente();
+    }
+
+    public void atualizarCliente(Usuario cliente) {
+        if (cliente == null) {
+            throw new IllegalArgumentException(
+                    "O cliente não pode ser nulo!");
+        }
+
+        clienteRepo.atualizar(cliente);
+    }
+
+    public void removerCliente(Usuario cliente) {
+        if (cliente == null) {
+            return;
+        }
+
+        clienteRepo.removerCliente(cliente);
     }
 }

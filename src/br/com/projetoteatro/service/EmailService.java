@@ -19,14 +19,13 @@ public class EmailService {
             anexo.setName(nomeAnexo);
 
             System.out.println("Arquivo recebido: " + arquivo);
-            //email.setDebug(true);
             File f = new File(arquivo);
             System.out.println("Existe? " + f.exists());
             System.out.println("Caminho absoluto: " + f.getAbsolutePath());
             email.setHostName("smtp.gmail.com");
             email.setAuthentication("testandoPoo@gmail.com", "ozlo ijvx xotz htrh");
             email.setSSL(true);
-            email.addTo(destinatario); //fiz com meu email para teste
+            email.addTo(destinatario);
             email.setFrom("testandoPoo@gmail.com");
             email.setSubject(assunto);
             email.setMsg(menssagem);
@@ -52,7 +51,7 @@ public class EmailService {
             email.setHostName("smtp.gmail.com");
             email.setAuthentication("testandoPoo@gmail.com", "ozlo ijvx xotz htrh");
             email.setSSL(true);
-            email.addTo(destinatario); //fiz com meu email para teste
+            email.addTo(destinatario);
             email.setFrom("testandoPoo@gmail.com");
             email.setSubject(assunto);
             email.setMsg(menssagem);

@@ -2,18 +2,90 @@ package br.com.projetoteatro.model;
 
 import br.com.projetoteatro.enums.Genero;
 
-import java.time.LocalDate;
-import java.time.Period;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+import jakarta.persistence.Table;
 
+import java.time.LocalDate;
+
+
+@Entity
+@Table(name = "pessoa")
+@Inheritance(strategy = InheritanceType.JOINED)
 public abstract class Pessoa {
-    protected Pessoa pessoa;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
     private String nome;
+
+    @Column(unique = true)
     private String email;
+
     private String telefone;
+
+    @Column(unique = true)
     private String cpf;
+
     private LocalDate dataNascimento;
+
+    @Enumerated(EnumType.STRING)
     private Genero sexo;
+
     private String senha;
+
+    public Pessoa() {
+    }
+
+    public Pessoa(String nome, String cpf, String email) {
+        this.nome = nome;
+        this.cpf = cpf;
+        this.email = email;
+    }
+
+    public Pessoa(String email) {
+        this.email = email;
+    }
+
+    public Pessoa(String nome, String email) {
+        this.nome = nome;
+        this.email = email;
+    }
+
+    public Pessoa(String nome, String email, String telefone, String cpf) {
+        this.nome = nome;
+        this.email = email;
+        this.telefone = telefone;
+        this.cpf = cpf;
+    }
+
+    public Pessoa(String nome, String cpf, String email,
+            Genero sexo, LocalDate dataNascimento,
+            String telefone) {
+
+        this.nome = nome;
+        this.cpf = cpf;
+        this.email = email;
+        this.telefone = telefone;
+        this.sexo = sexo;
+        this.dataNascimento = dataNascimento;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     public String getSenha() {
         return senha;
@@ -63,38 +135,13 @@ public abstract class Pessoa {
         this.dataNascimento = dataNascimento;
     }
 
-    public Pessoa() {
-
+    public Genero getSexo() {
+        return sexo;
     }
 
-    public Pessoa(String email) {
-        this.email = email;
+    public void setSexo(Genero sexo) {
+        this.sexo = sexo;
     }
-
-    public Pessoa(String nome, String email) {
-        this.nome = nome;
-        this.email = email;
-    }
-
-    public Pessoa(String nome, String email, String telefone, String cpf) {
-        this.nome = nome;
-        this.email = email;
-        this.telefone = telefone;
-        this.cpf = cpf;
-    }
-    public Pessoa(String nome, String cpf, String email, Genero sexo, LocalDate dataNascimento, String telefone) {
-        this.nome = nome;
-        this.cpf = cpf;
-        this.email = email;
-        this.telefone = telefone;
-        this.sexo= sexo;
-        this.dataNascimento=dataNascimento;
-
-    }
-
-    //public boolean verficadorIdade() {
-     //   return Period.between(dataNascimento, LocalDate.now()).getYears() >= 18;
-  //  }
 
     @Override
     public String toString() {
@@ -102,7 +149,5 @@ public abstract class Pessoa {
                 "E-mail: " + getEmail() + System.lineSeparator() +
                 "Telefone: " + getTelefone() + System.lineSeparator() +
                 "CPF: " + getCpf() + System.lineSeparator();
-                //"Maior idade: " + verficadorIdade();
-
     }
 }

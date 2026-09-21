@@ -1,75 +1,57 @@
 package br.com.projetoteatro.service.validators;
 
-import br.com.projetoteatro.enums.StatusProposta;
-import br.com.projetoteatro.exceptions.*;
-import br.com.projetoteatro.model.*;
+import br.com.projetoteatro.repository.*;
+import br.com.projetoteatro.service.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-/*
 public class ServicoTeatro {
-    private ClienteService clienteService;
-    private ArtistaService artistaService;
-    private AdministradorService administradorService;
-    private LoginService loginService;
-    private PropostaService propostaService;
-    private RegrasService regrasService;
-    private ArrayList<Peca> listaPecas;
-     private ArrayList<Sessao> listaSessoes;
-    private ArrayList<Ingresso> listaIngressos;
 
-    public ServicoTeatro(){
+    private final AdministradorService administradorService;
+    private final ClienteService clienteService;
+    private final ArtistaService artistaService;
+    private final LoginService loginService;
+    private final PropostaService propostaService;
+    private final RegrasService regrasService;
+    private final ContratoService contratoService;
+    private final IngressoService ingressoService;
+    private final UsuarioService usuarioService;
+    private final SessaoService sessaoService;
+    private final PecaService pecaService;
 
-        clienteService = new ClienteService();
-        artistaService = new ArtistaService();
-        administradorService = new AdministradorService();
-        regrasService=new RegrasService();
-        propostaService= new PropostaService();
+    public ServicoTeatro() {
 
-        loginService = new LoginService(administradorService,clienteService,artistaService);
-    }
+        AdministradorRepository admRepository = new AdministradorRepository();
+        ClienteRepository clienteRepository = new ClienteRepository();
+        ArtistaRepository artistaRepository = new ArtistaRepository();
+        PropostasRepository propostasRepository = new PropostasRepository();
+        RegrasPrecoRepository regrasRepository = new RegrasPrecoRepository();
+        ContratoRepository contratoRepository = new ContratoRepository();
+        IngressoRepository ingressoRepository = new IngressoRepository();
+        UsuarioRepository usuarioRepository = new UsuarioRepository();
+        SessaoRepository sessaoRepository = new SessaoRepository();
+        PecaRepository pecaRepository = new PecaRepository();
 
-    public ClienteService getClienteService() {
-        return clienteService;
-    }
+        this.administradorService = new AdministradorService(admRepository);
+        this.clienteService = new ClienteService(clienteRepository);
+        this.artistaService = new ArtistaService(artistaRepository);
 
-    public ArtistaService getArtistaService() {
-        return artistaService;
-    }
+        this.loginService = new LoginService(
+                admRepository,
+                clienteRepository,
+                artistaRepository);
 
-    //excluir
-    public boolean excluirRegra(long id) throws RegraInvalidaException {
-        RegraAluguel regra=buscarRegra(id);
-        return listaRegras.remove(regra);
-    }
-    //cadastrar proposta
-    public void cadastrarProposta(PropostaAluguel p)throws ConflitoHorarioException{
-        validador.validarConflitoHorario(p,listaPropostas);
-        listaPropostas.add(p);
-    }
-    //gerar proposta pdf
-    public void geradorProposta(long id){
-        PropostaAluguel proposta=buscarProposta(id);
-        //GeradorDePDF.gerarContrato(proposta);
-    }
-    //buscar proposta por id
-    public PropostaAluguel buscarProposta(long id) throws PropostaInvalidaException {
-        for(PropostaAluguel p: listaPropostas){
-            if(p.getId()==id){
-                return p;
-            }
-        }
-        throw new PropostaInvalidaException("Proposta não encontrada....");
+        this.regrasService = new RegrasService(regrasRepository);
 
-    }
-    //lista Proposta
-    public ArrayList<PropostaAluguel> getListaPropostas() {
-        return listaPropostas;
-    }
-    public void contratarProposta(long id) throws PropostaInvalidaException{
-        PropostaAluguel proposta=buscarProposta(id);
-        //proposta.setStatusProposta(StatusProposta.CONTRATADO);
+        this.propostaService = new PropostaService(
+                regrasService,
+                propostasRepository,
+                artistaRepository,
+                contratoRepository);
+
+        this.contratoService = new ContratoService(contratoRepository);
+        this.ingressoService = new IngressoService(ingressoRepository);
+        this.usuarioService = new UsuarioService(usuarioRepository);
+        this.sessaoService = new SessaoService(sessaoRepository);
+        this.pecaService = new PecaService(pecaRepository);
     }
 
     public LoginService getLoginService() {
@@ -85,6 +67,34 @@ public class ServicoTeatro {
     }
 
     public AdministradorService getAdministradorService() {
+        return administradorService;
+    }
+
+    public ClienteService getClienteService() {
+        return clienteService;
+    }
+
+    public ArtistaService getArtistaService() {
+        return artistaService;
+    }
+
+    public ContratoService getContratoService() {
+        return contratoService;
+    }
+
+    public IngressoService getIngressoService() {
+        return ingressoService;
+    }
+
+    public UsuarioService getUsuarioService() {
+        return usuarioService;
+    }
+
+    public SessaoService getSessaoService() {
+        return sessaoService;
+    }
+
+    public PecaService getPecaService() {
+        return pecaService;
     }
 }
-*/

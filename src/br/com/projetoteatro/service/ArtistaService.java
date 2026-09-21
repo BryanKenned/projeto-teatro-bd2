@@ -2,53 +2,81 @@ package br.com.projetoteatro.service;
 
 import br.com.projetoteatro.exceptions.CPFInvalidoException;
 import br.com.projetoteatro.exceptions.ContratanteInvalidoException;
+import br.com.projetoteatro.exceptions.EmailInvalidoException;
 import br.com.projetoteatro.model.Contratante;
+import br.com.projetoteatro.repository.ArtistaRepository;
 import br.com.projetoteatro.service.validators.ValidadorCPF;
-
-import java.util.ArrayList;
+import br.com.projetoteatro.service.validators.ValidadorEmail;
 
 public class ArtistaService {
-   //CRUD DE ARTISTA
 
-    private ArrayList<Contratante> listaContratante;
-    public ArtistaService(){
-        listaContratante=new ArrayList<>();
+    private ArtistaRepository artistaRepo;
 
-    }
+    public ArtistaService(ArtistaRepository artistaRepo) {
 
-    //cadastrar contratante
-    public void cadastrarContratante(Contratante c) throws CPFInvalidoException {
-        if(!ValidadorCPF.isValido(c.getCpf())){
-            throw new CPFInvalidoException("CPF inválido...");
+        if (artistaRepo == null) {
+            throw new IllegalArgumentException(
+                    "O Repositório de Artista não pode ser nulo!"
+            );
         }
-        listaContratante.add(c);
+
+        this.artistaRepo = artistaRepo;
     }
 
-    //buscar contratante por cpf
-    public Contratante buscarContratante(String cpf) throws CPFInvalidoException, ContratanteInvalidoException {
-        if(!ValidadorCPF.isValido(cpf)){
-            throw new CPFInvalidoException("CPF inválido...");
+    public void cadastrarArtista(Contratante artista)
+            throws CPFInvalidoException,
+            ContratanteInvalidoException,
+            EmailInvalidoException {
+
+        if (artista == null) {
+            throw new ContratanteInvalidoException(
+                    "O artista não pode ser nulo!"
+            );
         }
-        for(Contratante x: listaContratante){
-            if(x.getCpf().equals(cpf)){
-                return x;
 
-            }
+        if (!ValidadorCPF.isValido(artista.getCpf())) {
+            throw new CPFInvalidoException(
+                    "CPF inválido!"
+            );
         }
-        throw new ContratanteInvalidoException("Contratante não encontrado....");
 
+        ValidadorEmail.validarEmail(artista.getEmail());
+
+        if (artistaRepo.buscarContratante(artista.getCpf()) != null) {
+            throw new ContratanteInvalidoException(
+                    "CPF já cadastrado!"
+            );
+        }
+
+        if (artistaRepo.buscarContratanteEmail(artista.getEmail()) != null) {
+            throw new ContratanteInvalidoException(
+                    "E-mail já cadastrado!"
+            );
+        }
+
+        artistaRepo.adicionarArtista(artista);
     }
 
-    //lista contratante
-    public ArrayList<Contratante> getListaContratante() {
-        return listaContratante;
+    public Contratante buscarPorCpf(String cpf) {
+
+        return artistaRepo.buscarContratante(cpf);
     }
 
-    public boolean excluirContratante(String cpf)throws CPFInvalidoException, ContratanteInvalidoException{
+    public Contratante buscarPorEmail(String email) {
 
-        Contratante contratante = buscarContratante(cpf);
-        return listaContratante.remove(contratante);
-
+        return artistaRepo.buscarContratanteEmail(email);
     }
 
+    public void excluirArtista(Contratante artista)
+            throws CPFInvalidoException,
+            ContratanteInvalidoException {
+
+        if (artista == null) {
+            throw new ContratanteInvalidoException(
+                    "O artista não pode ser nulo!"
+            );
+        }
+
+        artistaRepo.excluirArtista(artista);
+    }
 }

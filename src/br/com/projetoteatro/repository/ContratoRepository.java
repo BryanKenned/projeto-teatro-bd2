@@ -1,141 +1,176 @@
 package br.com.projetoteatro.repository;
 
-import br.com.projetoteatro.model.PropostaAluguel;
-import com.thoughtworks.xstream.XStream;
-import com.thoughtworks.xstream.io.xml.StaxDriver;
-import com.thoughtworks.xstream.security.AnyTypePermission;
+import br.com.projetoteatro.config.JPAUtil;
+import br.com.projetoteatro.model.Contrato;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.nio.file.Files;
-import java.util.ArrayList;
+import jakarta.persistence.EntityManager;
+
 import java.util.List;
 
 public class ContratoRepository {
-    private XStream xstream = new XStream(new StaxDriver());
-    private final File ARQUIVO = new File("contratos.xml");
 
     public ContratoRepository() {
-        this.xstream.addPermission(AnyTypePermission.ANY);
-        this.xstream.alias("proposta", PropostaAluguel.class);
-        this.xstream.alias("contratos", List.class);
     }
 
-    public void salvarContrato(PropostaAluguel proposta) {
-        List<PropostaAluguel> propostas = carregarContratos();
-        propostas.add(proposta);
-        String xml = xstream.toXML(propostas);
+    public void adicionarContrato(Contrato contrato) {
+
+        EntityManager em = JPAUtil.getEntityManager();
 
         try {
-            if(!ARQUIVO.exists()) {
-                ARQUIVO.createNewFile();
+            em.getTransaction().begin();
+
+            if (contrato.getProposta() != null && contrato.getProposta().getId() != null) {
+                br.com.projetoteatro.model.PropostaAluguel propManaged = em
+                        .find(br.com.projetoteatro.model.PropostaAluguel.class, contrato.getProposta().getId());
+
+                if (propManaged != null) {
+                    contrato.setProposta(propManaged);
+                }
             }
 
-            try (PrintWriter gravar = new PrintWriter(ARQUIVO)) {
-                gravar.print(xml);
+            em.persist(contrato);
+
+            em.getTransaction().commit();
+
+        } catch (Exception e) {
+
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
             }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+
+            throw e;
+
+        } finally {
+            em.close();
         }
     }
 
-    public List<PropostaAluguel> carregarContratos() {
+    public List<Contrato> listarContrato() {
+
+        EntityManager em = JPAUtil.getEntityManager();
+
         try {
-            if (!ARQUIVO.exists() || ARQUIVO.length() == 0) {
-                return new ArrayList<PropostaAluguel>();
-            }
+            return em.createQuery(
+                    "SELECT c FROM Contrato c",
+                    Contrato.class).getResultList();
 
-            String xml = new String(Files.readAllBytes(ARQUIVO.toPath()));
-            Object objetoLido = xstream.fromXML(xml);
-
-            if (objetoLido instanceof List) {
-                return (List<PropostaAluguel>) objetoLido;
-            }
-            else if (objetoLido instanceof PropostaAluguel) {
-                List<PropostaAluguel> listaTratada = new ArrayList<PropostaAluguel>();
-                listaTratada.add((PropostaAluguel) objetoLido);
-                return listaTratada;
-            }
-
-            return new ArrayList<PropostaAluguel>();
-
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        } finally {
+            em.close();
         }
     }
 
-    public PropostaAluguel buscaContratoPorId(long id) {
-        List<PropostaAluguel> propostas = carregarContratos();
+    public void removerContrato(Contrato contrato) {
 
-        if (propostas == null || propostas.isEmpty()) {
+        EntityManager em = JPAUtil.getEntityManager();
+
+        try {
+            em.getTransaction().begin();
+
+            Contrato contratoGerenciado = em.find(Contrato.class, contrato.getId());
+
+            if (contratoGerenciado != null) {
+                em.remove(contratoGerenciado);
+            }
+
+            em.getTransaction().commit();
+
+        } catch (Exception e) {
+
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+
+            throw e;
+
+        } finally {
+            em.close();
+        }
+    }
+
+    public Contrato buscarContrato(long id) {
+
+        EntityManager em = JPAUtil.getEntityManager();
+
+        try {
+            return em.find(Contrato.class, id);
+
+        } finally {
+            em.close();
+        }
+    }
+
+    public void atualizar(Contrato contrato) {
+        EntityManager em = JPAUtil.getEntityManager();
+
+        try {
+            em.getTransaction().begin();
+
+            em.merge(contrato);
+
+            em.getTransaction().commit();
+
+        } catch (Exception e) {
+
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+
+            throw e;
+
+        } finally {
+            em.close();
+        }
+    }
+
+    public List<Contrato> listarContratosAtivos() {
+        EntityManager em = JPAUtil.getEntityManager();
+
+        try {
+            return em.createQuery(
+                    "SELECT c FROM Contrato c WHERE c.statusContrato = :status",
+                    Contrato.class)
+                    .setParameter(
+                            "status",
+                            br.com.projetoteatro.enums.StatusContrato.ATIVO)
+                    .getResultList();
+
+        } finally {
+            em.close();
+        }
+    }
+
+    public List<Contrato> buscarPorNomePeca(String nomePeca) {
+        EntityManager em = JPAUtil.getEntityManager();
+
+        try {
+            return em.createQuery(
+                    "SELECT c FROM Contrato c WHERE LOWER(c.nomePeca) LIKE LOWER(:nome)",
+                    Contrato.class)
+                    .setParameter("nome", "%" + nomePeca + "%")
+                    .getResultList();
+
+        } finally {
+            em.close();
+        }
+    }
+
+    public Contrato buscarPorProposta(Long propostaId) {
+        if (propostaId == null) {
             return null;
         }
+        EntityManager em = JPAUtil.getEntityManager();
 
-        for (PropostaAluguel proposta : propostas) {
-            if (proposta.getId() == id) {
-                return proposta;
-            }
-        }
-        return null;
-    }
-
-    public List<PropostaAluguel> listarTodos() {
-        return carregarContratos();
-    }
-
-    // <<< SEU MÉTODO DE FILTRO COM SINTAXE COMUM >>>
-    public List<PropostaAluguel> listarComFiltros(String nomePeca, String status) {
-        List<PropostaAluguel> todos = carregarContratos();
-        List<PropostaAluguel> filtrados = new ArrayList<PropostaAluguel>();
-
-        for (PropostaAluguel c : todos) {
-            boolean bateNome = false;
-            boolean bateStatus = false;
-
-            // 1. Valida o filtro de Nome da Peça
-            if (nomePeca == null || nomePeca.isEmpty()) {
-                bateNome = true;
-            } else if (c.getNomePeca().toLowerCase().contains(nomePeca.toLowerCase())) {
-                bateNome = true;
-            }
-
-            // 2. Valida o filtro de Status
-            if (status.equals("Todos")) {
-                bateStatus = true;
-            } else if (c.getStatusProposta().toString().equalsIgnoreCase(status)) {
-                bateStatus = true;
-            }
-
-            // Se passar nos dois filtros, adiciona na lista
-            if (bateNome && bateStatus) {
-                filtrados.add(c);
-            }
-        }
-
-        return filtrados;
-    }
-
-    public void atualizarContrato(PropostaAluguel propostaAtualizada) {
-        List<PropostaAluguel> propostas = carregarContratos();
-
-        // Procura a proposta antiga dentro da lista do XML
-        for (int i = 0; i < propostas.size(); i++) {
-            if (propostas.get(i).getId() == propostaAtualizada.getId()) {
-                // Substitui a proposta antiga pela nova (com status alterado)
-                propostas.set(i, propostaAtualizada);
-                break;
-            }
-        }
-
-        // Grava a lista atualizada de volta no arquivo XML
-        String xml = xstream.toXML(propostas);
         try {
-            try (PrintWriter gravar = new PrintWriter(ARQUIVO)) {
-                gravar.print(xml);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException("Erro ao atualizar o XML: " + e.getMessage());
+            return em.createQuery(
+                    "SELECT c FROM Contrato c WHERE c.proposta.id = :propostaId",
+                    Contrato.class)
+                    .setParameter("propostaId", propostaId)
+                    .getResultStream()
+                    .findFirst()
+                    .orElse(null);
+
+        } finally {
+            em.close();
         }
     }
 }

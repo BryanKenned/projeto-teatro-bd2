@@ -1,572 +1,314 @@
 package br.com.projetoteatro.app;
 
-import br.com.projetoteatro.exceptions.AdiministradorInvalidoException;
-import br.com.projetoteatro.exceptions.ContratanteInvalidoException;
-import br.com.projetoteatro.exceptions.SenhaInvalidaException;
-import br.com.projetoteatro.model.*;
-import br.com.projetoteatro.service.EmailService;
-import br.com.projetoteatro.service.LoginService;
-//import br.com.projetoteatro.service.ServicoTeatro;
-//import br.com.projetoteatro.service.ServicoTeatro;
-//import br.com.projetoteatro.repository.Persistencia;
+import br.com.projetoteatro.config.JPAUtil;
+import br.com.projetoteatro.dto.EstatisticaVendasDTO;
+import br.com.projetoteatro.dto.IngressoResumoDTO;
+import br.com.projetoteatro.enums.StatusAssento;
+import br.com.projetoteatro.enums.StatusContrato;
+import br.com.projetoteatro.enums.StatusProposta;
+import br.com.projetoteatro.enums.TipoSetor;
+import br.com.projetoteatro.enums.Turno;
+import br.com.projetoteatro.model.Assento;
+import br.com.projetoteatro.model.Contratante;
+import br.com.projetoteatro.model.Contrato;
+import br.com.projetoteatro.model.Ingresso;
+import br.com.projetoteatro.model.Peca;
+import br.com.projetoteatro.model.PropostaAluguel;
+import br.com.projetoteatro.model.Sessao;
+import br.com.projetoteatro.model.Setor;
+import br.com.projetoteatro.model.Usuario;
+import br.com.projetoteatro.repository.ArtistaRepository;
+import br.com.projetoteatro.repository.AssentoRepository;
+import br.com.projetoteatro.repository.ContratoRepository;
+import br.com.projetoteatro.repository.IngressoRepository;
+import br.com.projetoteatro.repository.PecaRepository;
+import br.com.projetoteatro.repository.PropostasRepository;
+import br.com.projetoteatro.repository.SessaoRepository;
+import br.com.projetoteatro.repository.SetorRepository;
+import br.com.projetoteatro.repository.UsuarioRepository;
+import br.com.projetoteatro.service.CodigoRecuperacaoSenhaService;
+import br.com.projetoteatro.service.EnviarEmailService;
+import br.com.projetoteatro.service.validators.ServicoTeatro;
+import br.com.projetoteatro.view.LoginView;
 
-
+import javax.swing.JFrame;
+import javax.swing.SwingUtilities;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Scanner;
-/*
+import java.util.Arrays;
+import java.util.List;
+
 public class Main {
 
-    private static ServicoTeatro central;
-    private static Persistencia persistencia;
-    private static final String ARQUIVO_CENTRAL = "central.xml";
-    public static void main(String[] args) {
-        persistencia = new Persistencia();
-        central = persistencia.recuperarCentral(ARQUIVO_CENTRAL);
+        public static void main(String[] args) {
+                boolean modoTeste = (args != null && Arrays.asList(args).contains("--teste"));
 
-        Scanner input = new Scanner(System.in);
+                if (modoTeste) {
+                        executarModoTeste();
+                } else {
+                        executarModoPadrao();
+                }
+        }
 
-        String opcao = "";
+        private static void executarModoPadrao() {
+                System.out.println("================================================================================");
+                System.out.println("                   SISTEMA DE GESTÃO E BILHETERIA TEATRAL                       ");
+                System.out.println(
+                                "================================================================================\n");
 
-        do {
-            System.out.println("1-Cadastrar adm");
-            System.out.println("2-Fazer Login");
-            System.out.println("3-Solicitar mudança senha");
-            System.out.println("4-Cadastrar Artista");
-            System.out.println("5-Fazer Login Artista");
-            System.out.println("6-Solicitar mudança senha Artista");
-            System.out.println("7-Mostrar lista de  Artistas");
-            System.out.println("8-Excluir artista da lista");
-            System.out.println("9-Cadastrar cliente");
-            System.out.println("10-Fazer Login Cliente");
-            System.out.println("11-Solicitar mudança senha Cliente");
-            System.out.println("12-Mostrar lista de  Cliente");
-            System.out.println("13-Excluir artista da Cliente");
-            System.out.println("14-Cadastrar Proposta de Aluguel");
-            System.out.println("15-Listar Propostas");
-            System.out.println("16-Detalhar/Promover Proposta");
-            System.out.println("17-Enviar Proposta por Email");
-            System.out.println("S-Sair");
-            opcao=input.nextLine();
-            LoginService login=central.getLoginService();
+                System.out.println("[INFO] Inicializando aplicação...");
+                System.out.println("[INFO] Inicializando JPA (EntityManagerFactory)...");
 
-            switch (opcao){
-                case "1"://cadastrando adm
-                    System.out.println("Digite seu nome: ");
-                    String nomeAdm= input.nextLine();
-                    System.out.println("Digite seu email: ");
-                    String emailAdm= input.nextLine();
-                    System.out.println("Digite seu telefone: ");
-                    String telefoneAdm= input.nextLine();
-                    System.out.println("Digite seu cpf: ");
-                    String cpfAdm= input.nextLine();
-                    System.out.println("Digite sua senha: ");
-                    String senhaAdm= input.nextLine();
-                    try{
-                        central.getAdministradorService().getAdm();
-                    }catch (AdiministradorInvalidoException e){
-                        Administrador adm=new Administrador(nomeAdm,emailAdm,telefoneAdm,cpfAdm,senhaAdm);
-                        central.getAdministradorService().cadastrarAdministrador(adm);
-                        persistencia.salvarCentral(central,ARQUIVO_CENTRAL);
-                    }
-                    //cadastrar artista e cliente
-                    break;
+                try {
+                        JPAUtil.getEntityManagerFactory();
 
-                case "2"://fazendo login
+                        AssentoRepository assentoRepo = new AssentoRepository();
+                        assentoRepo.inicializarAssentosPadraoSeNecessario();
 
-                    System.out.print("Email: ");
-                    String email = input.nextLine();
-                    System.out.print("Senha: ");
-                    String senha = input.nextLine();
+                        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                                System.out.println("\n[INFO] Encerrando aplicação...");
+                                JPAUtil.fechar();
+                                System.out.println("[INFO] Recursos JPA encerrados com sucesso.");
+                        }));
 
-                    try {
+                        System.out.println("[INFO] Abrindo tela de login...");
+                        SwingUtilities.invokeLater(() -> iniciarInterfaceGrafica());
 
-                        Pessoa pessoa = login.autenticar(email, senha);
-                        if(pessoa instanceof Administrador){
-                            Administrador admLogado = (Administrador) pessoa;
-                            System.out.println("Bem-vindo " + admLogado.getNome());
-                        }else{
-                            System.out.println("Esse usuário não é administrador.");
-                        }
-                        //entrei na tela adm...
-
-                    } catch (AdiministradorInvalidoException e) {
+                } catch (Exception e) {
+                        System.err.println("[ERRO CRÍTICO] Falha ao inicializar recursos de persistência: "
+                                        + e.getMessage());
                         e.printStackTrace();
-                        break;
-                        ///case3
-                    }
-                    break;
+                }
+        }
 
-                case "3"://solicitando alteração senha
-                    try{
-                        System.out.print("Confirme seu cpf para alterar senha: ");
-                        String cpfprocurado = input.nextLine();
-                        central.getLoginService().solicitarMudancaSenha(cpfprocurado);
+        private static void executarModoTeste() {
+                System.out.println("================================================================================");
+                System.out.println("          SISTEMA DE GESTÃO E BILHETERIA TEATRAL - MODO TESTE (JPA/H2)          ");
+                System.out.println(
+                                "================================================================================\n");
 
-                        System.out.print("CPF: ");
-                        String cpf = input.nextLine();
-                        System.out.print("Código recebido: ");
-                        String codigo = input.nextLine();
-                        System.out.print("Nova senha: ");
-                        String novaSenha = input.nextLine();
+                String sufixo = String.valueOf(System.currentTimeMillis() % 1000000);
 
-                        central.getLoginService().redefinirSenha(cpf, codigo, novaSenha);
-                        persistencia.salvarCentral(central, ARQUIVO_CENTRAL);
-                    }catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                    break;
-                case "4"://cadastrando artista
-                    System.out.println("Digite seu nome: ");
-                    String nomeArtista= input.nextLine();
-                    System.out.println("Digite seu email: ");
-                    String emailArtista= input.nextLine();
-                    System.out.println("Digite seu telefone: ");
-                    String telefoneArtista= input.nextLine();
-                    System.out.println("Digite seu cpf: ");
-                    String cpfArtista= input.nextLine();
-                    System.out.println("Digite sua senha: ");
-                    String senhaArtista= input.nextLine();
-                    try{
-                        Contratante contratante =new Contratante(nomeArtista,emailArtista,telefoneArtista,cpfArtista,senhaArtista);
-                        central.getArtistaService().cadastrarContratante(contratante);
-                        persistencia.salvarCentral(central,ARQUIVO_CENTRAL);
-                    }catch (Exception e){
-                        e.printStackTrace();
-                    }
-                    break;
-                case "5"://fazer login artista
-                    System.out.print("Email: ");
-                    emailArtista = input.nextLine();
-                    System.out.print("Senha: ");
-                    senhaArtista = input.nextLine();
+                try {
+                        System.out.println("[INFO] 1. Inicializando DAOs e verificando EntityManagerFactory...");
+                        SetorRepository setorRepo = new SetorRepository();
+                        AssentoRepository assentoRepo = new AssentoRepository();
+                        ArtistaRepository artistaRepo = new ArtistaRepository();
+                        PecaRepository pecaRepo = new PecaRepository();
+                        SessaoRepository sessaoRepo = new SessaoRepository();
+                        PropostasRepository propostaRepo = new PropostasRepository();
+                        ContratoRepository contratoRepo = new ContratoRepository();
+                        UsuarioRepository usuarioRepo = new UsuarioRepository();
+                        IngressoRepository ingressoRepo = new IngressoRepository();
+                        System.out.println("       -> DAOs instanciados com sucesso!\n");
 
-                    try{
-                        Contratante artista=(Contratante)login.autenticar(emailArtista,senhaArtista);
-                        System.out.println("Bem-vindo " + artista.getNome());
-                    }catch (Exception e) {
-                        e.printStackTrace();}
-                    break;
+                        System.out.println("[INFO] 2. Executando etapa de PERSISTÊNCIA REAL (Salvar)...");
 
-                case "6"://solicitar mudança de senha
-                    try{
-                        System.out.print("Confirme seu cpf para alterar senha: ");
-                        String cpfArtistaprocurado = input.nextLine();
-                        central.getLoginService().solicitarMudancaSenha(cpfArtistaprocurado);
+                        Setor setor = new Setor(TipoSetor.PLATEIA, 100.0, 120);
+                        setorRepo.adicionarSetor(setor);
 
+                        String codAssento = "A1-" + sufixo;
+                        Assento assento = new Assento(codAssento, StatusAssento.DISPONIVEL, setor);
+                        setor.adicionarAssento(assento);
+                        assentoRepo.adicionarAssento(assento);
+                        System.out.println("       -> Setor [" + setor.getSetor() + "] e Assento [" + codAssento
+                                        + "] salvos.");
 
-                        System.out.print("Código recebido: ");
-                        String codigo = input.nextLine();
-                        System.out.print("Nova senha: ");
-                        String novaSenha = input.nextLine();
+                        Contratante artista = new Contratante(
+                                        "Cia Teatral Suassuna " + sufixo,
+                                        "suassuna_" + sufixo + "@teatro.com",
+                                        "81999990001",
+                                        "cpf_art_" + sufixo,
+                                        "senhaArt123");
+                        artistaRepo.adicionarArtista(artista);
+                        System.out.println("       -> Artista/Contratante [" + artista.getNome()
+                                        + "] persistido com ID: " + artista.getId());
 
-                        central.getLoginService().redefinirSenha(cpfArtistaprocurado,codigo,novaSenha);
-                        persistencia.salvarCentral(central, ARQUIVO_CENTRAL);
-                    }catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                        Peca peca = new Peca();
+                        peca.setNome("O Auto da Compadecida " + sufixo);
+                        peca.setArtistaResponsavel(artista);
+                        peca.setDataInicio(LocalDate.now());
+                        peca.setDataFim(LocalDate.now().plusDays(10));
+                        peca.setPrecoIngresso(80.0);
+                        peca.setStatus(StatusProposta.CONTRATADO);
+                        peca.setValorAluguel(4500.0);
+                        pecaRepo.adicionarPeca(peca);
+                        System.out.println("       -> Peça [" + peca.getNome() + "] salva com ID: " + peca.getId());
 
-                    break;
-                case "7"://listar artista
+                        Sessao sessao = new Sessao(peca.getNome(), LocalTime.of(20, 0));
+                        sessao.setData(LocalDate.now());
+                        sessao.setHorarioFim(LocalTime.of(22, 0));
+                        sessao.setTurno(Turno.NOITE);
+                        sessao.setPeca(peca);
+                        peca.adicionarSessao(sessao);
+                        sessaoRepo.adicionarSessao(sessao);
+                        System.out.println("       -> Sessão vinculada para as " + sessao.getHorarioInicio()
+                                        + " salva com ID: " + sessao.getId());
 
-                    for(Contratante c : central.getArtistaService().getListaContratante()){
-                        System.out.println(c);
-                    }
-
-                    break;
-                case "8":
-
-                    System.out.print("CPF do Artista: ");
-                    String cpfArtistaProcurado = input.nextLine();
-                    try{
-                        central.getArtistaService().excluirContratante(cpfArtistaProcurado);
-                        persistencia.salvarCentral(central, ARQUIVO_CENTRAL);
-                        System.out.println("Cliente removido!");
-
-                        }catch(Exception e){
-                        e.printStackTrace();
-                    }
-
-                    break;
-                case "9"://cadastrando Cliente
-                    System.out.println("Digite seu nome: ");
-                    String nomeCliente= input.nextLine();
-                    System.out.println("Digite seu email: ");
-                    String emailCliente= input.nextLine();
-                    System.out.println("Digite seu telefone: ");
-                    String telefoneCliente= input.nextLine();
-                    System.out.println("Digite seu cpf: ");
-                    String cpfCliente= input.nextLine();
-                    System.out.println("Digite sua senha: ");
-                    String senhaCliente= input.nextLine();
-                    try{
-                        Usuario cliente =new Usuario(nomeCliente,emailCliente,telefoneCliente,cpfCliente,senhaCliente);
-                        central.getClienteService().cadastrarCliente(cliente);
-                        persistencia.salvarCentral(central,ARQUIVO_CENTRAL);
-
-                    }catch(Exception e){
-                        e.printStackTrace();
-                    }
-
-                    break;
-
-                case "10"://login cliente
-                    System.out.print("Email: ");
-                    emailCliente = input.nextLine();
-                    System.out.print("Senha: ");
-                    senhaCliente = input.nextLine();
-
-                    try{
-                        Usuario cliente=(Usuario)login.autenticar(emailCliente,senhaCliente);
-                        System.out.println("Bem-vindo " + cliente.getNome());
-                    }catch (Exception e) {
-                        e.printStackTrace();}
-                    break;
-
-                case "11"://solicitar mudança senha cliente
-                    try{
-                        System.out.print("Confirme seu cpf para alterar senha: ");
-                        String cpfClienteprocurado = input.nextLine();
-                        central.getLoginService().solicitarMudancaSenha(cpfClienteprocurado);
-
-                        System.out.print("Código recebido: ");
-                        String codigo = input.nextLine();
-                        System.out.print("Nova senha: ");
-                        String novaSenha = input.nextLine();
-
-                        central.getLoginService().redefinirSenha(cpfClienteprocurado,codigo,novaSenha);
-                        persistencia.salvarCentral(central, ARQUIVO_CENTRAL);
-                    }catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                    break;
-
-
-                case "12"://listar cliente
-
-                    for(Usuario c : central.getClienteService().getListaCliente()){
-                        System.out.println(c);
-                    }
-
-                    break;
-                case "13":
-
-                    System.out.print("CPF do cliente: ");
-                    String cpfClienteProcurado = input.nextLine();
-                    try{
-                        central.getClienteService().excluirCliente(cpfClienteProcurado);
-                        persistencia.salvarCentral(central, ARQUIVO_CENTRAL);
-                        System.out.println("Cliente removido!");
-
-                    }catch(Exception e){
-                        e.printStackTrace();
-                    }
-
-                    break;
-
-                case "14"://cadastrar proposta
-
-                    try {
-
-                        Contratante artista;
-
-                        System.out.print("CPF do artista responsável: ");
-                        String cpfArtistaa = input.nextLine();
-
-                        try {
-
-                            artista = central.getArtistaService()
-                                    .buscarContratante(cpfArtistaa);
-
-                            System.out.println(
-                                    "Artista já cadastrado. Dados reutilizados."
-                            );
-
-                        } catch (ContratanteInvalidoException e) {
-
-                            System.out.println(
-                                    "Primeiro aluguel deste artista."
-                            );
-
-                            System.out.print("Nome: ");
-                            String nome = input.nextLine();
-
-                            System.out.print("Email: ");
-                            String emaill = input.nextLine();
-
-                            System.out.print("Telefone: ");
-                            String telefone = input.nextLine();
-
-                            System.out.print("Senha: ");
-                            String senhaa = input.nextLine();
-
-                            artista = new Contratante(
-                                    nome,
-                                    emaill,
-                                    telefone,
-                                    cpfArtistaa,
-                                    senhaa
-                            );
-
-                            central.getArtistaService()
-                                    .cadastrarContratante(artista);
-                        }
-
-                        System.out.print("Nome da peça: ");
-                        String nomePeca = input.nextLine();
-
-                        System.out.print("Valor do aluguel: ");
-                        double valorAluguel =
-                                Double.parseDouble(input.nextLine());
-
-                        System.out.print("Valor do ingresso: ");
-                        double valorIngresso =
-                                Double.parseDouble(input.nextLine());
-
-                        DateTimeFormatter formatoData =
-                                DateTimeFormatter.ofPattern("dd/MM/yyyy");
-
-                        System.out.print(
-                                "Data início (dd/MM/yyyy): "
-                        );
-
-                        LocalDate dataInicio =
-                                LocalDate.parse(
-                                        input.nextLine(),
-                                        formatoData
-                                );
-
-                        System.out.print(
-                                "Data fim (dd/MM/yyyy): "
-                        );
-
-                        LocalDate dataFim =
-                                LocalDate.parse(
-                                        input.nextLine(),
-                                        formatoData
-                                );
-
-                        System.out.print(
-                                "Horário início (HH:mm): "
-                        );
-
-                        LocalTime horarioInicio =
-                                LocalTime.parse(input.nextLine());
-
-                        System.out.print(
-                                "Horário fim (HH:mm): "
-                        );
-
-                        LocalTime horarioFim =
-                                LocalTime.parse(input.nextLine());
-
-                        PropostaAluguel proposta =
-                                new PropostaAluguel(
+                        PropostaAluguel proposta = new PropostaAluguel(
                                         artista,
-                                        nomePeca,
-                                        valorAluguel,
-                                        dataInicio,
-                                        dataFim,
-                                        horarioInicio,
-                                        horarioFim,
-                                        valorIngresso
-                                );
+                                        peca.getNome(),
+                                        4500.0,
+                                        LocalDate.now(),
+                                        LocalDate.now().plusDays(10),
+                                        LocalTime.of(20, 0),
+                                        LocalTime.of(22, 0),
+                                        80.0);
+                        proposta.setStatusProposta(StatusProposta.CONTRATADO);
+                        propostaRepo.adicionarProposta(proposta);
 
-                        central.getPropostaService()
-                                .cadastrarProposta(proposta);
+                        Contrato contrato = new Contrato(proposta);
+                        contrato.setStatusContrato(StatusContrato.ATIVO);
+                        contratoRepo.adicionarContrato(contrato);
+                        System.out.println("       -> Contrato formalizado com ID: " + contrato.getId());
 
-                        persistencia.salvarCentral(
-                                central,
-                                ARQUIVO_CENTRAL
-                        );
+                        Usuario usuario = new Usuario(
+                                        "Carlos Drummond " + sufixo,
+                                        "carlos_" + sufixo + "@email.com",
+                                        "81988880002",
+                                        "cpf_usr_" + sufixo,
+                                        "senhaUsr123");
+                        usuarioRepo.adicionar(usuario);
+                        System.out.println("       -> Usuário/Cliente [" + usuario.getNome() + "] persistido com ID: "
+                                        + usuario.getId());
 
+                        Ingresso ingresso = new Ingresso(
+                                        usuario,
+                                        sessao,
+                                        assento,
+                                        TipoSetor.PLATEIA,
+                                        true,
+                                        80.0,
+                                        contrato);
+                        ingressoRepo.adicionarIngresso(ingresso);
+                        System.out.println("       -> Ingresso emitido com código UUID: " + ingresso.getCodigo()
+                                        + " (ID: " + ingresso.getId() + ")\n");
+
+                        System.out.println("[INFO] 3. Executando etapa de BUSCA REAL nos DAOs (Buscar)...");
+
+                        Usuario usuarioEncontrado = usuarioRepo.buscarPorCpf("cpf_usr_" + sufixo);
+                        System.out.println("       -> [Busca por CPF] Encontrado: " +
+                                        (usuarioEncontrado != null
+                                                        ? usuarioEncontrado.getNome() + " ("
+                                                                        + usuarioEncontrado.getEmail() + ")"
+                                                        : "NÃO ENCONTRADO"));
+
+                        Peca pecaEncontrada = pecaRepo.buscarPeca(peca.getId());
+                        System.out.println("       -> [Busca Peça por ID] Encontrada: " +
+                                        (pecaEncontrada != null
+                                                        ? pecaEncontrada.getNome() + " | Artista: "
+                                                                        + pecaEncontrada.getArtistaResponsavel()
+                                                                                        .getNome()
+                                                        : "NÃO ENCONTRADA"));
+
+                        Ingresso ingressoEncontrado = ingressoRepo.buscarIngresso(ingresso.getId());
+                        System.out.println("       -> [Busca Ingresso por ID] Encontrado: R$ " +
+                                        (ingressoEncontrado != null
+                                                        ? ingressoEncontrado.getValor() + " | Setor: "
+                                                                        + ingressoEncontrado.getSetor()
+                                                        : "NÃO ENCONTRADO")
+                                        + "\n");
+
+                        System.out.println("[INFO] 4. Executando etapa de LISTAGEM REAL nos DAOs (Listar)...");
+
+                        List<Peca> todasPecas = pecaRepo.listarPecas();
+                        System.out.println("       -> Total de peças recuperadas no banco: " + todasPecas.size());
+                        todasPecas.stream().limit(3).forEach(p -> System.out
+                                        .println("          * " + p.getNome() + " (Status: " + p.getStatus() + ")"));
+
+                        List<Ingresso> todosIngressos = ingressoRepo.listarIngresso();
                         System.out.println(
-                                "Proposta cadastrada com sucesso!"
-                        );
-
-                        System.out.println(
-                                "ID da proposta: "
-                                        + proposta.getId()
-                        );
-
-                    } catch (Exception e) {
-
-                        System.out.println(
-                                "Erro ao cadastrar proposta: "
-                                        + e.getMessage()
-                        );
-                    }
-
-                    break;
-                case "15"://listar proposta
-
-                    for(PropostaAluguel p :
-                            central.getPropostaService().getListaPropostas()) {
-
-                        System.out.println(p);
-                    }
-
-                    break;
-                case "16":
-
-                    try {
-
-                        System.out.print(
-                                "ID da proposta: "
-                        );
-
-                        long id =
-                                Long.parseLong(
-                                        input.nextLine()
-                                );
-
-                        PropostaAluguel proposta =
-                                central.getPropostaService().buscarProposta(id);
-
-                        System.out.println(
-                                "Peça: "
-                                        + proposta.getNomePeca()
-                        );
-
-                        System.out.println(
-                                "Artista: "
-                                        + proposta.getContratante().getNome()
-                        );
-
-                        System.out.println(
-                                "Período: "
-                                        + proposta.getDataInicio()
-                                        + " até "
-                                        + proposta.getDataFim()
-                        );
-
-                        System.out.println(
-                                "Horário: "
-                                        + proposta.getHorarioInicio()
-                                        + " às "
-                                        + proposta.getHorarioFim()
-                        );
-
-                        System.out.println(
-                                "Valor aluguel: "
-                                        + proposta.getValorAluguel()
-                        );
-
-                        System.out.println(
-                                "Valor ingresso: "
-                                        + proposta.getValorIngresso()
-                        );
-
-                        System.out.println(
-                                "Status atual: "
-                                        + proposta.getStatusProposta()
-                        );
-
+                                        "       -> Total de ingressos recuperados no banco: " + todosIngressos.size());
+                        todosIngressos.stream().limit(3).forEach(i -> System.out.println(
+                                        "          * Ingresso: " + i.getCodigo() + " | Valor: R$ " + i.getValor()));
                         System.out.println();
+
                         System.out.println(
-                                "1 - Aprovar proposta"
-                        );
+                                        "[INFO] 5. Executando Consultas JPQL com Funções Agregadoras (COUNT, AVG, SUM)...");
+                        Long totalIngressos = ingressoRepo.contarTotalIngressosVendidos();
+                        Double faturamentoTotal = ingressoRepo.somarFaturamentoTotal();
+                        Double precoMedio = ingressoRepo.calcularPrecoMedioIngresso();
+                        Long totalPecas = pecaRepo.contarTotalPecas();
+
+                        System.out.println(String.format("       -> [COUNT] Total de Ingressos Vendidos: %d",
+                                        totalIngressos));
                         System.out.println(
-                                "2 - Encerrar contrato"
-                        );
-                        System.out.println(
-                                "3 - Estender contrato"
-                        );
+                                        String.format("       -> [COUNT] Total de Peças Cadastradas: %d", totalPecas));
+                        System.out.println(String.format("       -> [SUM]   Faturamento Total Arrecadado: R$ %.2f",
+                                        faturamentoTotal));
+                        System.out.println(String.format(
+                                        "       -> [AVG]   Preço Médio do Ingresso (Ticket Médio): R$ %.2f\n",
+                                        precoMedio));
 
-                        String escolha =
-                                input.nextLine();
+                        System.out.println("[INFO] 6. Executando Consultas JPQL com JOIN Explícito entre Entidades...");
 
-                        switch (escolha) {
-
-                            case "1":
-
-                                proposta.contratar();
-
-                                System.out.println(
-                                        "Proposta aprovada."
-                                );
-
-                                break;
-
-                            case "2":
-
-                                proposta.encerrarContrato();
-
-                                System.out.println(
-                                        "Contrato encerrado."
-                                );
-
-                                break;
-
-                            case "3":
-
-                                DateTimeFormatter formato =
-                                        DateTimeFormatter
-                                                .ofPattern(
-                                                        "dd/MM/yyyy"
-                                                );
-
-                                System.out.print(
-                                        "Nova data final: "
-                                );
-
-                                LocalDate novaData =
-                                        LocalDate.parse(
-                                                input.nextLine(),
-                                                formato
-                                        );
-
-                                proposta.estenderContrato(
-                                        novaData
-                                );
-
-                                System.out.println(
-                                        "Contrato alterado."
-                                );
-
-                                break;
+                        List<Ingresso> ingressosDoCliente = ingressoRepo
+                                        .buscarIngressosPorCpfClienteComJoin("cpf_usr_" + sufixo);
+                        System.out.println("       -> [JOIN: Ingresso -> Usuario] Ingressos do CPF [" + "cpf_usr_"
+                                        + sufixo + "]: " + ingressosDoCliente.size());
+                        for (Ingresso ing : ingressosDoCliente) {
+                                System.out.println("          * " + ing.getCodigo() + " | Comprador: "
+                                                + ing.getCliente().getNome() + " | Sessão: "
+                                                + ing.getSessao().getNomePeca());
                         }
 
-                        persistencia.salvarCentral(
-                                central,
-                                ARQUIVO_CENTRAL
-                        );
+                        List<Peca> pecasPorArtista = pecaRepo.buscarPecasPorArtistaComJoin("Suassuna");
+                        System.out.println("       -> [JOIN: Peca -> Contratante] Peças com artista 'Suassuna': "
+                                        + pecasPorArtista.size());
+                        for (Peca p : pecasPorArtista) {
+                                System.out.println("          * " + p.getNome() + " | Artista Responsável: "
+                                                + p.getArtistaResponsavel().getNome());
+                        }
+                        System.out.println();
 
-                    } catch(Exception e) {
+                        System.out.println("[INFO] 7. Executando Consulta Otimizada via DTO Projection...");
+
+                        List<IngressoResumoDTO> resumosDTO = ingressoRepo.listarResumoIngressosDTO();
+                        System.out.println(
+                                        "       -> DTOs retornados via 'SELECT new br.com.projetoteatro.dto.IngressoResumoDTO(...)':");
+                        resumosDTO.stream().limit(3).forEach(dto -> {
+                                System.out.println("          * " + dto);
+                        });
+
+                        EstatisticaVendasDTO estatisticaDTO = ingressoRepo.obterEstatisticaVendasDTO();
+                        System.out.println(
+                                        "       -> DTO consolidado via 'SELECT new br.com.projetoteatro.dto.EstatisticaVendasDTO(...)':");
+                        System.out.println("          * " + estatisticaDTO);
 
                         System.out.println(
-                                e.getMessage()
-                        );
-                    }
+                                        "================================================================================");
+                        System.out.println(
+                                        "     TODAS AS OPERAÇÕES FORAM EXECUTADAS COM SUCESSO E SEM NENHUMA EXCEPTION!   ");
+                        System.out.println(
+                                        "================================================================================\n");
 
-                    break;
-                case "17":
-
-                    try {
-
-                        System.out.print("ID da proposta: ");
-                        long id = Long.parseLong(input.nextLine());
-
-                        boolean enviado =
-                                central.getPropostaService()
-                                        .enviarPropostaPorEmail(id);
-
-                        if(enviado){
-                            System.out.println("Email enviado com sucesso!");
-                        }else{
-                            System.out.println("Falha ao enviar email.");
-                        }
-
-                    } catch(Exception e) {
+                } catch (Exception e) {
+                        System.err.println("[ERRO CRÍTICO] Falha inesperada durante o pipeline de execução:");
                         e.printStackTrace();
-                    }
+                } finally {
+                        JPAUtil.fechar();
+                        System.out.println("[INFO] JPAUtil encerrado com sucesso.");
+                        System.exit(0);
+                }
+        }
 
-                    break;
+        private static void iniciarInterfaceGrafica() {
+                try {
+                        ServicoTeatro servicoTeatro = new ServicoTeatro();
+                        EnviarEmailService emailService = new EnviarEmailService();
+                        CodigoRecuperacaoSenhaService codigoService = new CodigoRecuperacaoSenhaService(emailService);
 
-            }
+                        LoginView login = new LoginView(
+                                        servicoTeatro.getLoginService(),
+                                        servicoTeatro.getAdministradorService(),
+                                        codigoService,
+                                        servicoTeatro.getRegrasService(),
+                                        servicoTeatro.getPropostaService());
 
-        }while(!"s".equalsIgnoreCase(opcao));
-
-    }
-}*/
+                        login.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                        login.setVisible(true);
+                } catch (Exception e) {
+                        System.err.println("[AVISO] Interface gráfica não pôde ser iniciada: " + e.getMessage());
+                }
+        }
+}

@@ -5,55 +5,56 @@ import br.com.projetoteatro.exceptions.EmailInvalidoException;
 public class ValidadorEmail {
 
     public static boolean validarEmail(String email) throws EmailInvalidoException {
-        //1. Não pode ser null
-        if(email == null) {
+        if (email == null) {
             throw new EmailInvalidoException("Digite um email válido no campo");
         }
-        //2. Não pode estar vazio
-        if(email.isBlank()) {
-            throw new EmailInvalidoException("O campo não pode está vazio!");
+        if (email.isBlank()) {
+            throw new EmailInvalidoException("O campo não pode estar vazio!");
         }
 
         int contadorArroba = 0;
+        for (char c : email.toCharArray()) {
+            if (c == '@') contadorArroba++;
+        }
+        if (contadorArroba != 1) {
+            throw new EmailInvalidoException("O e-mail deve conter exatamente um '@'");
+        }
 
-        for(int i = 0; i < email.length(); i++) {
-            char caracter = email.charAt(i);
-
-            if(caracter == '@') {
-                contadorArroba++;
+        String caracteresProibidos = "!#$%^&*()+=[]{}|\\;:'\",<>/?";
+        for (char c : email.toCharArray()) {
+            if (caracteresProibidos.indexOf(c) != -1) {
+                throw new EmailInvalidoException("O e-mail contém caracteres inválidos!");
             }
         }
-        //3. Deve possuir exatamente 1 @
-        if(contadorArroba != 1) {
-            throw new EmailInvalidoException("Digite um email válido!");
-        }
-        //5. Não pode começar com @
-        if(email.charAt(0) == '@') {
-            throw new EmailInvalidoException("Um email não pode ser iniciado com @");
-        }
-        //6. Não pode terminar com @
-        if(email.charAt(email.length() - 1) == '@') {
-            throw new EmailInvalidoException("Um email não pode ser finalizado com @");
-        }
-        //* 7. Deve possuir pelo menos um .
-        if(!email.contains(".")) {
-            throw new EmailInvalidoException("Digite um email válido!");
-        }
+
+        if (email.startsWith("@")) throw new EmailInvalidoException("Um e-mail não pode iniciar com @");
+        if (email.endsWith("@")) throw new EmailInvalidoException("Um e-mail não pode terminar com @");
 
         int posicaoArroba = email.indexOf('@');
-
         String antesArroba = email.substring(0, posicaoArroba);
+        String depoisArroba = email.substring(posicaoArroba + 1);
 
-        if(antesArroba.contains(" ")) {
-            throw new EmailInvalidoException("Digite um email válido !");
+        if (antesArroba.contains(" ")) {
+            throw new EmailInvalidoException("O e-mail não pode conter espaços");
+        }
+        if (antesArroba.isEmpty()) {
+            throw new EmailInvalidoException("Deve haver caracteres antes do @");
         }
 
-        /*
-        8. Não pode terminar com .
-        9. O . deve estar depois do @
-        10. Deve ter caracteres antes do @
-        11. Deve ter caracteres depois do @*/
+        if (!depoisArroba.contains(".")) {
+            throw new EmailInvalidoException("O domínio deve conter um ponto (.)");
+        }
+        if (depoisArroba.startsWith(".")) {
+            throw new EmailInvalidoException("O domínio não pode iniciar com ponto");
+        }
+        if (depoisArroba.endsWith(".")) {
+            throw new EmailInvalidoException("O domínio não pode terminar com ponto");
+        }
+        if (depoisArroba.contains(" ")) {
+            throw new EmailInvalidoException("O e-mail não pode conter espaços");
+        }
 
         return true;
     }
+
 }

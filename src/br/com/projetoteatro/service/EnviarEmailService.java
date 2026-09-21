@@ -38,7 +38,7 @@ public class EnviarEmailService {
             email.setAuthentication("testandoPoo@gmail.com", "ozlo ijvx xotz htrh");
 
             email.setSSL(true);
-            email.addTo(destinatario); //fiz com meu email para teste
+            email.addTo(destinatario);
             email.setFrom("testandoPoo@gmail.com");
             email.setSubject(assunto);
             email.setMsg(menssagem);

@@ -1,30 +1,29 @@
 package br.com.projetoteatro.model;
 
-public class Administrador extends Pessoa {
-    private String senha;
-    public Administrador() {
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 
+
+@Entity
+@Table(name = "administrador")
+public class Administrador extends Pessoa {
+
+    public Administrador() {
+        super();
     }
+
     public Administrador(String email, String senha) {
         super(email);
-        this.senha = senha;
+        setSenha(senha);
     }
 
     public Administrador(String nome, String email, String senha) {
         super(nome, email);
-        this.senha = senha;
+        setSenha(senha);
     }
+
     public Administrador(String nome, String email, String telefone, String cpf, String senha) {
         super(nome, email, telefone, cpf);
-        this.senha = senha;
+        setSenha(senha);
     }
-
-    public String getSenha() {
-        return senha;
-    }
-
-    public void setSenha(String senha) {
-        this.senha = senha;
-    }
-
 }

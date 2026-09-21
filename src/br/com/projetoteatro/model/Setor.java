@@ -1,16 +1,49 @@
 package br.com.projetoteatro.model;
 
 import br.com.projetoteatro.enums.TipoSetor;
-
-import java.util.List;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 
 import java.util.ArrayList;
+import java.util.List;
 
+
+@Entity
 public class Setor {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Enumerated(EnumType.STRING)
     private TipoSetor tipoSetor;
+
     private double valor;
+
     private int capacidade;
-    private List<Assento> assentos;
+
+    @OneToMany(mappedBy = "setor", cascade = CascadeType.ALL)
+    private List<Assento> assentos = new ArrayList<>();
+
+    public Setor() {
+    }
+
+    public Setor(TipoSetor setor, double valor, int capacidade) {
+        this.tipoSetor = setor;
+        this.valor = valor;
+        this.capacidade = capacidade;
+        this.assentos = new ArrayList<>();
+    }
+
+    public Long getId() {
+        return id;
+    }
 
     public TipoSetor getSetor() {
         return tipoSetor;
@@ -40,24 +73,22 @@ public class Setor {
         return assentos;
     }
 
-    public void setAssentos(List<Assento> assento) {
-        this.assentos = assento;
+    public void setAssentos(List<Assento> assentos) {
+        this.assentos = assentos;
     }
 
-    public Setor() {
-
+    public void adicionarAssento(Assento assento) {
+        assentos.add(assento);
+        assento.setSetor(this);
     }
 
-    public Setor(TipoSetor setor,double valor,int capacidade) {
-        this.tipoSetor = setor;
-        this.valor = valor;
-        this.capacidade = capacidade;
-        this.assentos = new ArrayList<>();
+    public void removerAssento(Assento assento) {
+        assentos.remove(assento);
+        assento.setSetor(null);
     }
 
+    @Override
     public String toString() {
-        return "Setor" + tipoSetor + System.lineSeparator() +
-                "Valor: " + valor + System.lineSeparator() +
-                "Capacidade: " + capacidade;
+        return this.tipoSetor.toString();
     }
 }

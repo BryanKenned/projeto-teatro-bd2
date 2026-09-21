@@ -1,9 +1,18 @@
 package br.com.projetoteatro.enums;
 
 public enum TipoSetor {
-    VIP,
-    CAMAROTE,
-    PLATEIA,
-    BALCAO_A,
-    BALCAO_B
+    PLATEIA("Plateia"),
+    CAMAROTE("Camarote"),
+    BALCAO("Balcão");
+
+    private String descricao;
+
+    TipoSetor(String descricao) {
+        this.descricao = descricao;
+    }
+
+    @Override
+    public String toString() {
+        return this.descricao;
+    }
 }

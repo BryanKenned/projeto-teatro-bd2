@@ -27,3 +27,10 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
+### Pastas do Maven e IntelliJ
+.idea/
+target/
+
+### Banco de dados H2
+!bancoteatro.mv.db

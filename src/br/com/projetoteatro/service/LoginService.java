@@ -3,108 +3,163 @@ package br.com.projetoteatro.service;
 import br.com.projetoteatro.exceptions.CPFInvalidoException;
 import br.com.projetoteatro.exceptions.ContratanteInvalidoException;
 import br.com.projetoteatro.exceptions.LoginInvalidoException;
-import br.com.projetoteatro.exceptions.SenhaInvalidaException;
 import br.com.projetoteatro.model.Administrador;
 import br.com.projetoteatro.model.Contratante;
 import br.com.projetoteatro.model.Pessoa;
 import br.com.projetoteatro.model.Usuario;
+import br.com.projetoteatro.repository.AdministradorRepository;
+import br.com.projetoteatro.repository.ArtistaRepository;
+import br.com.projetoteatro.repository.ClienteRepository;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 public class LoginService {
+
     private Map<String, String> codigosRecuperacaoSenha = new HashMap<>();
-    private ArrayList<Pessoa> listaPessoas;
 
-    private ClienteService clienteService;
-    private AdministradorService admService;
-    private ArtistaService artistaService;
-    public LoginService(AdministradorService admService,ClienteService clienteService,ArtistaService artistaService){
-        this.clienteService=clienteService;
-        this.admService=admService;
-        this.artistaService=artistaService;
+    private ClienteRepository clienteRepository;
+    private AdministradorRepository admRepository;
+    private ArtistaRepository artistaRepository;
 
+    public LoginService(
+            AdministradorRepository admRepository,
+            ClienteRepository clienteRepository,
+            ArtistaRepository artistaRepository) {
+
+        this.clienteRepository = clienteRepository;
+        this.admRepository = admRepository;
+        this.artistaRepository = artistaRepository;
     }
 
-    public Pessoa autenticar(String email, String senha) throws LoginInvalidoException {
-        for(Contratante pessoa: artistaService.getListaContratante()){
-            if(pessoa.getEmail().equals(email)){
-                if(pessoa.getSenha().equals(senha)){
-                    return pessoa;
-                }
-                throw new LoginInvalidoException("Senha inválido!");
-            }
+    public Pessoa autenticar(String email, String senha)
+            throws LoginInvalidoException {
+
+        if (email == null || email.isBlank() || senha == null || senha.isBlank()) {
+            throw new LoginInvalidoException("Preencha o e-mail e a senha!");
         }
 
-        Administrador adm=admService.getAdm();
-        if(adm!=null&&adm.getEmail().equals(email)){
-            if(adm.getSenha().equals(senha)){
+        String emailLimpo = email.trim();
+
+        Contratante artista =
+                artistaRepository.buscarContratanteEmail(emailLimpo);
+
+        if (artista != null) {
+            if (artista.getSenha() != null && artista.getSenha().equals(senha)) {
+                return artista;
+            }
+
+            throw new LoginInvalidoException("Senha inválida!");
+        }
+
+        Administrador adm =
+                admRepository.buscarAdmEmail(emailLimpo);
+
+        if (adm != null) {
+            if (adm.getSenha() != null && adm.getSenha().equals(senha)) {
                 return adm;
             }
-            throw new LoginInvalidoException("Senha inválido!");
+
+            throw new LoginInvalidoException("Senha inválida!");
         }
 
-        for(Usuario pessoa: clienteService.getListaCliente()){
-            if(pessoa.getEmail().equals(email)){
-                if(pessoa.getSenha().equals(senha)){
-                    return pessoa;
-                }
-                throw new LoginInvalidoException("Senha inválido!");
+        Usuario cliente =
+                clienteRepository.buscarClienteEmail(emailLimpo);
+
+        if (cliente != null) {
+            if (cliente.getSenha() != null && cliente.getSenha().equals(senha)) {
+                return cliente;
             }
-        }
-        throw new LoginInvalidoException("Usuario não encontrado!");
 
+            throw new LoginInvalidoException("Senha inválida!");
+        }
+
+        throw new LoginInvalidoException("Usuário não encontrado!");
     }
-    private Pessoa buscarPessoa(String cpf){
 
-        try{
-            return clienteService.buscarCliente(cpf);
-        }catch(Exception e){}
+    private Pessoa buscarPessoa(String cpf) {
 
-        try{
-            return artistaService.buscarContratante(cpf);
-        }catch(Exception e){}
+        Usuario cliente =
+                clienteRepository.buscarCliente(cpf);
 
-        try{
-            Administrador adm = admService.getAdm();
+        if (cliente != null) {
+            return cliente;
+        }
 
-            if(adm.getCpf().equals(cpf)){
-                return adm;
-            }
-        }catch(Exception e){}
+        Contratante artista =
+                artistaRepository.buscarContratante(cpf);
+
+        if (artista != null) {
+            return artista;
+        }
+
+        Administrador adm =
+                admRepository.buscarAdm(cpf);
+
+        if (adm != null) {
+            return adm;
+        }
 
         return null;
     }
 
+    public void solicitarMudancaSenha(String cpf)
+            throws CPFInvalidoException, ContratanteInvalidoException {
 
-    public void solicitarMudancaSenha(String cpf)throws CPFInvalidoException, ContratanteInvalidoException {
-        Pessoa c=buscarPessoa(cpf);
-        if(c==null){
-            throw new CPFInvalidoException("Cpf não cadastrado...");
+        Pessoa pessoa = buscarPessoa(cpf);
+
+        if (pessoa == null) {
+            throw new CPFInvalidoException("CPF não cadastrado...");
         }
 
-            //coloquei downcast de string não funcionou ver se o valueof...deu erro tbm
-            String codigo=String.valueOf((int)(Math.random()*10000));
-            codigosRecuperacaoSenha.put(cpf,codigo);
-            EmailService.enviarEmailCodigoSenha(c.getEmail(),"Mudança de SENHA","Segue o código validador para mudança de senha "+codigo);
+        String codigo =
+                String.valueOf((int) (Math.random() * 10000));
+
+        codigosRecuperacaoSenha.put(cpf, codigo);
+
+        EmailService.enviarEmailCodigoSenha(
+                pessoa.getEmail(),
+                "Mudança de SENHA",
+                "Segue o código validador para mudança de senha "
+                        + codigo
+        );
 
         System.out.println("Código gerado: " + codigo);
-        System.out.println("Email destino: " + c.getEmail());
-        System.out.println("cpf: " + c.getCpf());
+        System.out.println("Email destino: " + pessoa.getEmail());
+        System.out.println("CPF: " + pessoa.getCpf());
     }
-    public void redefinirSenha(String cpf,String codigo,String novaSenha)throws CPFInvalidoException, ContratanteInvalidoException{
-        Pessoa c=buscarPessoa(cpf);
-        if(c==null){
-            throw new CPFInvalidoException("Cpf não cadastrado...");
-        }
-        String codigoGuardado=codigosRecuperacaoSenha.get(cpf);
 
-        if(codigoGuardado==null||!codigoGuardado.equals(codigo)){
+    public void redefinirSenha(
+            String cpf,
+            String codigo,
+            String novaSenha)
+            throws CPFInvalidoException, ContratanteInvalidoException {
+
+        Pessoa pessoa = buscarPessoa(cpf);
+
+        if (pessoa == null) {
+            throw new CPFInvalidoException("CPF não cadastrado...");
+        }
+
+        String codigoGuardado =
+                codigosRecuperacaoSenha.get(cpf);
+
+        if (codigoGuardado == null ||
+                !codigoGuardado.equals(codigo)) {
+
             throw new IllegalArgumentException("Código inválido");
         }
-        c.setSenha(novaSenha);
+
+        pessoa.setSenha(novaSenha);
+
+        if (pessoa instanceof Administrador) {
+            admRepository.salvarOuAtualizar((Administrador) pessoa);
+        } else if (pessoa instanceof Contratante) {
+            artistaRepository.atualizar((Contratante) pessoa);
+        } else if (pessoa instanceof Usuario) {
+            clienteRepository.atualizar((Usuario) pessoa);
+        }
+
         codigosRecuperacaoSenha.remove(cpf);
     }
-    }
-
+}

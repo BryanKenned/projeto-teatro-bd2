@@ -1,46 +1,28 @@
 package br.com.projetoteatro.model;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+
+
+@Entity
+@Table(name = "contratante")
 public class Contratante extends Pessoa {
- private Pessoa pessoa;
- private long id;
-     private String senha;
+
+    public Contratante() {
+        super();
+    }
 
     public Contratante(String nome) {
-        this.setNome(nome);
+        super();
+        setNome(nome);
     }
 
-    public Contratante(String nome, String email, String telefone,String cpf) {
-     super(nome,email,telefone,cpf);
-     this.id = System.currentTimeMillis();
+    public Contratante(String nome, String email, String telefone, String cpf) {
+        super(nome, email, telefone, cpf);
     }
 
- public Contratante(String nome, String email, String telefone, String cpf,String senha) {
-  super(nome, email, telefone, cpf);
-  this.id = System.currentTimeMillis();
-  this.senha=senha;
- }
-
- public void setPessoa(Pessoa pessoa) {
-  this.pessoa = pessoa;
- }
-
- public void setId(long id) {
-  this.id = id;
- }
-
- public void setSenha(String senha) {
-  this.senha = senha;
- }
-
- public Pessoa getPessoa() {
-  return pessoa;
- }
-
- public long getId() {
-  return id;
- }
-
- public String getSenha() {
-  return senha;
- }
+    public Contratante(String nome, String email, String telefone, String cpf, String senha) {
+        super(nome, email, telefone, cpf);
+        setSenha(senha);
+    }
 }

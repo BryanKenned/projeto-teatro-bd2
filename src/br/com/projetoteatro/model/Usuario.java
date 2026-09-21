@@ -2,46 +2,42 @@ package br.com.projetoteatro.model;
 
 import br.com.projetoteatro.enums.Genero;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+
 import java.time.LocalDate;
 
-//Classe usuario final expectador
-public class Usuario extends Pessoa{
-    private String senha;
-    private long id;
-    public Usuario(){
-        this.id = System.currentTimeMillis();
 
-    }
+@Entity
+@Table(name = "usuario")
+public class Usuario extends Pessoa {
 
-    public Usuario(String email,String senha){
+    public Usuario() {
         super();
-        this.id=System.currentTimeMillis();
-        this.senha = senha;
-
     }
 
-    public Usuario(String nome, String CPF, String email, Genero sexo, LocalDate dataNascimento, String telefone, String senha) {
-        super( nome,CPF,email,sexo,dataNascimento,telefone);
-        this.id=System.currentTimeMillis();
-        this.senha = senha;
-    }
-    public Usuario(String nome,String email,String telefone,String cpf,String senha) {
-        super( nome,email,telefone,cpf);
-        this.id=System.currentTimeMillis();
-        this.senha = senha;
+    public Usuario(String nome, String cpf, String email) {
+        super(nome, cpf, email);
     }
 
-    public String getSenha() {
-        return senha;
+    public Usuario(String email, String senha) {
+        super();
+        setEmail(email);
+        setSenha(senha);
     }
 
-    public void setSenha(String senha) {
-        this.senha = senha;
+    public Usuario(String nome, String CPF, String email,
+            Genero sexo, LocalDate dataNascimento,
+            String telefone, String senha) {
+
+        super(nome, CPF, email, sexo, dataNascimento, telefone);
+        setSenha(senha);
     }
 
-    public long getId() {
-        return id;
+    public Usuario(String nome, String email,
+            String telefone, String cpf, String senha) {
+
+        super(nome, email, telefone, cpf);
+        setSenha(senha);
     }
-
-
 }
