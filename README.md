@@ -1,2 +1,2 @@
 # projeto-teatro
-Projeto final POO
+Projeto final Banco de Dados II 
